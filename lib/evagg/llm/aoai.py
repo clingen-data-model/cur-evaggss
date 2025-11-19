@@ -44,10 +44,10 @@ class ChatMessages:
 
 
 class OpenAIConfig(BaseModel):
-    deployment: str
-    endpoint: str
+    deployment: str | None
+    endpoint: str | None
     api_key: str | None = None
-    api_version: str
+    api_version: str | None
     max_parallel_requests: int = 0
     token_provider: Any = None
     timeout: int = 60
