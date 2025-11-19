@@ -18,11 +18,6 @@ library:
   di_factory: lib.evagg.SinglePaperLibrary
   paper_client:
     di_factory: lib/config/objects/ncbi.yaml
-    # di_factory: lib/config/objects/ncbi_cache.yaml
-  llm_client: "{{llm_client}}"
-  allowed_categories:
-    - "genetic disease"
-  allow_abstracts: true
 extractor:
   di_factory: lib.evagg.PromptBasedContentExtractor
   fields:

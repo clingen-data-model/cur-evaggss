@@ -4,7 +4,7 @@ from .app import PaperQueryApp, SinglePMIDApp
 from .content import PromptBasedContentExtractor, PromptBasedContentExtractorCached
 from .interfaces import IEvAggApp, IExtractFields, IGetPapers, IWriteOutput
 from .io import TableOutputWriter, JSONOutputWriter
-from .library import RareDiseaseFileLibrary, RareDiseaseLibraryCached
+from .library import RareDiseaseFileLibrary, RareDiseaseLibraryCached, SinglePaperLibrary
 from .simple import PropertyContentExtractor, SampleContentExtractor, SimpleFileLibrary
 from .truthset import TruthsetFileHandler
 
@@ -25,6 +25,7 @@ __all__ = [
     "TruthsetFileHandler",
     "RareDiseaseFileLibrary",
     "RareDiseaseLibraryCached",
+    "SinglePaperLibrary",
     # Content.
     "PromptBasedContentExtractor",
     "PromptBasedContentExtractorCached",

@@ -48,21 +48,24 @@ class SinglePMIDApp(IEvAggApp):
     def __init__(
         self,
         pmid: str,
+        gene_symbol: str,
         library: IGetPapers,
         extractor: IExtractFields,
         writer: IWriteOutput,
     ) -> None:
         self._pmid = pmid
+        self._gene_symbol = gene_symbol
         self._library = library
         self._extractor = extractor
         self._writer = writer
 
     def execute(self) -> None:
         # Get the papers that match this query.
-        papers = self._library.get_papers({"pmid": self._pmid})
+        papers = self._library.get_papers(self._pmid)
         assert len(papers) == 1
         logger.info(f"Found {len(papers)} papers for pmid: {self._pmid}")
-        output_file = self._writer.write(self._extractor.extract(paper, term))
+        import pdb; pdb.set_trace()
+        output_file = self._writer.write(self._extractor.extract(papers[0], self._gene_symbol))
         set_run_complete(output_file)
 
 
