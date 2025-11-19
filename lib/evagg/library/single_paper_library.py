@@ -18,6 +18,4 @@ class SinglePaperLibrary(IGetPapers):
         self._paper_client = paper_client
 
     def get_papers(self, pmid: str) -> Sequence[Paper]:
-        return [
-            self._paper_client.fetch(pmid, include_fulltext=True)
-        ]
+        return [self._paper_client.fetch(pmid, include_fulltext=True)]

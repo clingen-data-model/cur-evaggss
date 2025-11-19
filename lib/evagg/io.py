@@ -45,13 +45,11 @@ class TableOutputWriter(IWriteOutput):
             output_stream.close()
         return self._path
 
+
 class JSONOutputWriter(IWriteOutput):
     def __init__(self, json_name: Optional[str] = None) -> None:
         self._generated = datetime.now().astimezone()
-        self._path = (
-            os.path.join(get_run_path(), f"{json_name}.json")
-            if json_name else None
-        )
+        self._path = os.path.join(get_run_path(), f"{json_name}.json") if json_name else None
 
         if self._path and os.path.exists(self._path):
             logger.warning(f"Overwriting existing output file: {self._path}")
@@ -67,7 +65,7 @@ class JSONOutputWriter(IWriteOutput):
         if self._path:
             os.makedirs(os.path.dirname(self._path), exist_ok=True)
 
-         # Package JSON payload
+        # Package JSON payload
         payload = {
             "generated": self._generated.strftime("%Y-%m-%d %H:%M:%S %Z"),
             "results": list(output),
@@ -80,4 +78,3 @@ class JSONOutputWriter(IWriteOutput):
             output_stream.close()
 
         return self._path
-

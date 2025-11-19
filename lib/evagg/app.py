@@ -43,6 +43,7 @@ class PaperQueryApp(IEvAggApp):
         output_file = self._writer.write(output_fieldsets)
         set_run_complete(output_file)
 
+
 class SinglePMIDApp(IEvAggApp):
 
     def __init__(
