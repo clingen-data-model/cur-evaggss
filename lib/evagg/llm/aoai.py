@@ -42,22 +42,30 @@ class ChatMessages:
     def to_list(self) -> List[ChatCompletionMessageParam]:
         return self._messages.copy()
 
-
 class OpenAIConfig(BaseModel):
-    deployment: str | None
-    endpoint: str | None
-    api_key: str | None = None
-    api_version: str | None
-    max_parallel_requests: int = 0
-    token_provider: Any = None
+    api_key: str
+    deployment: str
     timeout: int = 60
+    max_parallel_requests: int = 0
 
+class AzureOpenAIConfig(OpenAIConfig):
+    api_version: str
+    endpoint: str
+    token_provider: Any = None
 
 class OpenAIClient(IPromptClient):
     _config: OpenAIConfig
 
     def __init__(self, config: Dict[str, Any]) -> None:
-        self._config = OpenAIConfig(**config)
+        client_class = config.pop('client_class', None)
+        if client_class == 'AsyncOpenAI':
+            self._client_class = AsyncOpenAI
+            self._config = OpenAIConfig(**config)
+        elif client_class == 'AsyncAzureOpenAI':
+            self._client_class = AsyncAzureOpenAI
+            self._config = AzureOpenAIConfig(**config)
+        else:
+            raise ValueError(f"Unknown client class: {self._client_class}")
 
     @property
     def _client(self) -> AsyncOpenAI:
@@ -65,21 +73,30 @@ class OpenAIClient(IPromptClient):
 
     @lru_cache
     def _get_client_instance(self) -> AsyncOpenAI:
-        logger.info(
-            f"Using AOAI API {self._config.api_version} at {self._config.endpoint}"
-            + f" (max_parallel={self._config.max_parallel_requests})."
-        )
-        if self._config.token_provider:
-            return AsyncAzureOpenAI(
+        if isinstance(self._config, AzureOpenAIConfig): 
+            logger.info(
+                f"Using AOAI API {self._config.api_version} at {self._config.endpoint}"
+                + f" (max_parallel={self._config.max_parallel_requests})."
+            )
+            if self._config.token_provider:
+                return self._client_class(
+                    azure_endpoint=self._config.endpoint,
+                    azure_ad_token_provider=self._config.token_provider,
+                    api_version=self._config.api_version,
+                    timeout=self._config.timeout,
+                )
+            return self._client_class(
                 azure_endpoint=self._config.endpoint,
-                azure_ad_token_provider=self._config.token_provider,
+                api_key=self._config.api_key,
                 api_version=self._config.api_version,
                 timeout=self._config.timeout,
             )
-        return AsyncAzureOpenAI(
-            azure_endpoint=self._config.endpoint,
+        logger.info(
+            f"Using AsyncOpenAI"
+            + f" (max_parallel={self._config.max_parallel_requests})."
+        )
+        return self._client_class(
             api_key=self._config.api_key,
-            api_version=self._config.api_version,
             timeout=self._config.timeout,
         )
 
@@ -119,7 +136,7 @@ class OpenAIClient(IPromptClient):
                 await asyncio.sleep(1)
             except (openai.APIConnectionError, openai.APITimeoutError) as e:
                 if connection_errors > 2:
-                    if self._config.endpoint.startswith("http://localhost"):
+                    if hasattr(self.config, 'endpoint') and self._config.endpoint.startswith("http://localhost"):
                         logger.error("Azure OpenAI API unreachable - have failed to start a local proxy?")
                     raise
                 if connection_errors == 0:

@@ -1,5 +1,6 @@
 di_factory: lib.evagg.llm.OpenAIClient
 config:
+  client_class: AsyncAzureOpenAI
   di_factory: lib.evagg.utils.get_dotenv_settings
   filter_prefix: "AZURE_OPENAI_"
   # Comment the following block out and provide a key in your .env file to use key-based authentication.

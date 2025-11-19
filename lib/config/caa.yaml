@@ -10,7 +10,7 @@ log:
 
 # Imported objects.
 llm_client:
-  di_factory: lib/config/objects/llm.yaml
+  di_factory: lib/config/objects/non_azure_llm.yaml
 
 # Application.
 di_factory: lib.evagg.SinglePMIDApp

@@ -1,6 +1,8 @@
 from functools import reduce
 from unittest.mock import AsyncMock, MagicMock, call, mock_open, patch
 
+from openai import AsyncAzureOpenAI
+
 from lib.evagg.llm import OpenAIClient
 
 
@@ -12,7 +14,7 @@ async def test_openai_client_prompt(mock_openai, test_file_contents) -> None:
 
     mock_openai.return_value.chat.completions.create.return_value.choices[0].message.content = "response"
     client = OpenAIClient(
-        {"deployment": "gpt-8", "endpoint": "https://ai", "api_key": "test", "api_version": "test", "timeout": 60}
+        {"deployment": "gpt-8", "endpoint": "https://ai", "api_key": "test", "api_version": "test", "timeout": 60, "client_class": "AsyncAzureOpenAI"}
     )
     with patch("builtins.open", mock_open(read_data=prompt_template)):
         response = await client.prompt_file(
@@ -44,7 +46,7 @@ async def test_openai_client_embeddings(mock_openai) -> None:
 
     inputs = [f"input_{i}" for i in range(1)]
     client = OpenAIClient(
-        {"deployment": "gpt-8", "endpoint": "https://ai", "api_key": "test", "api_version": "test", "timeout": 60}
+        {"deployment": "gpt-8", "endpoint": "https://ai", "api_key": "test", "api_version": "test", "timeout": 60, "client_class": "AsyncAzureOpenAI"}
     )
     response = await client.embeddings(inputs)
     mock_openai.assert_called_once_with(azure_endpoint="https://ai", api_key="test", api_version="test", timeout=60)
