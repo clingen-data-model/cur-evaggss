@@ -93,7 +93,7 @@ class OpenAIClient(IPromptClient):
                 api_version=self._config.api_version,
                 timeout=self._config.timeout,
             )
-        logger.info(f"Using AsyncOpenAI" + f" (max_parallel={self._config.max_parallel_requests}).")
+        logger.info("Using AsyncOpenAI" + f" (max_parallel={self._config.max_parallel_requests}).")
         return self._client_class(
             api_key=self._config.api_key,
             timeout=self._config.timeout,

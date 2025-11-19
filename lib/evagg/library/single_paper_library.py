@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Sequence
+from typing import Sequence
 
 from lib.evagg.interfaces import IGetPapers
 from lib.evagg.ref import IPaperLookupClient
