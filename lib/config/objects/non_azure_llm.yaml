@@ -1,7 +1,5 @@
 di_factory: lib.evagg.llm.OpenAIClient
+client_class: AsyncOpenAI
 config:
-  client_class: AsyncOpenAI
-  deployment: "gpt-4o-mini"
-  di_factory: lib.evagg.utils.get_dotenv_settings
+  di_factory: lib.evagg.utils.get_env_settings
   filter_prefix: "OPENAI_"
-  

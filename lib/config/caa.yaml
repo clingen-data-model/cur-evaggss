@@ -22,8 +22,7 @@ extractor:
   di_factory: lib.evagg.PromptBasedContentExtractor
   fields:
     di_factory: lib/config/fields/evidence_all.yaml
-  llm_client:
-    di_factory: lib/config/objects/llm_cache.yaml
+  llm_client: "{{llm_client}}"
   phenotype_searcher:
     di_factory: lib.evagg.ref.WebHPOClient
     web_client:

@@ -56,8 +56,7 @@ class AzureOpenAIConfig(OpenAIConfig):
 class OpenAIClient(IPromptClient):
     _config: OpenAIConfig
 
-    def __init__(self, config: Dict[str, Any]) -> None:
-        client_class = config.pop('client_class', None)
+    def __init__(self, client_class: str, config: Dict[str, Any]) -> None:
         if client_class == 'AsyncOpenAI':
             self._client_class = AsyncOpenAI
             self._config = OpenAIConfig(**config)
@@ -65,7 +64,7 @@ class OpenAIClient(IPromptClient):
             self._client_class = AsyncAzureOpenAI
             self._config = AzureOpenAIConfig(**config)
         else:
-            raise ValueError(f"Unknown client class: {self._client_class}")
+            raise ValueError(f"Unknown client class: {client_class}")
 
     @property
     def _client(self) -> AsyncOpenAI:
