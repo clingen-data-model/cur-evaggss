@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from lib.evagg import RareDiseaseFileLibrary, SimpleFileLibrary
-from lib.evagg.library import SinglePaperLibrary, RareDiseaseLibraryCached
+from lib.evagg.library import RareDiseaseLibraryCached, SinglePaperLibrary
 from lib.evagg.llm import IPromptClient
 from lib.evagg.ref import IPaperLookupClient
 from lib.evagg.types import Paper
