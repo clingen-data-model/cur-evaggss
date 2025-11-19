@@ -41,7 +41,6 @@ extractor:
     llm_client: "{{llm_client}}"
     variant_factory: 
       di_factory: lib/config/objects/variant_factory.yaml
-      # di_factory: lib/config/objects/variant_factory_cache.yaml
     variant_comparator: 
       di_factory: lib.evagg.content.HGVSVariantComparator
 writer:
