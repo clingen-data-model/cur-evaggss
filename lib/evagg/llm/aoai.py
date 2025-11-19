@@ -156,10 +156,12 @@ class OpenAIClient(IPromptClient):
                 "prompt_tokens": completion.usage.prompt_tokens,
                 "completion_tokens": completion.usage.completion_tokens,
                 "cached_tokens": (
-                    completion.usage.prompt_tokens_details.cached_tokens
-                    if (completion and hasattr(completion.usage, "prompt_tokens_details"))
-                    else -1
-                ),
+                    getattr(
+                        getattr(completion.usage, "prompt_tokens_details", None),
+                        "cached_tokens",
+                        -1
+                    ) if (completion and hasattr(completion, "usage")) else -1
+                )
             },
         }
 
