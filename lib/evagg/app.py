@@ -64,7 +64,6 @@ class SinglePMIDApp(IEvAggApp):
         papers = self._library.get_papers(self._pmid)
         assert len(papers) == 1
         logger.info(f"Found {len(papers)} papers for pmid: {self._pmid}")
-        import pdb; pdb.set_trace()
         output_file = self._writer.write(self._extractor.extract(papers[0], self._gene_symbol))
         set_run_complete(output_file)
 
