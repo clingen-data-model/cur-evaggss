@@ -76,7 +76,7 @@ class OpenAIClient(IPromptClient):
 
     @lru_cache
     def _get_client_instance(self) -> AsyncOpenAI:
-        if isinstance(self._client_class, AsyncAzureOpenAI):
+        if self._client_class is AsyncAzureOpenAI:
             logger.info(
                 f"Using AOAI API {self._config.api_version} at {self._config.endpoint}"
                 + f" (max_parallel={self._config.max_parallel_requests})."
