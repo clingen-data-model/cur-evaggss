@@ -1,5 +1,5 @@
 import logging
-from typing import Sequence
+from typing import Any, Dict, Sequence
 
 from lib.evagg.interfaces import IGetPapers
 from lib.evagg.ref import IPaperLookupClient
@@ -17,5 +17,7 @@ class SinglePaperLibrary(IGetPapers):
     ) -> None:
         self._paper_client = paper_client
 
-    def get_papers(self, pmid: str) -> Sequence[Paper]:
-        return [self._paper_client.fetch(pmid, include_fulltext=True)]
+    def get_papers(self, query: Dict[str, Any]) -> Sequence[Paper]:
+        pmid = query["pmid"]
+        paper = self._paper_client.fetch(pmid, include_fulltext=True)
+        return [paper] if paper else []

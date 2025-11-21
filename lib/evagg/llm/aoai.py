@@ -57,6 +57,7 @@ class AzureOpenAIConfig(OpenAIConfig):
 
 
 class OpenAIClient(IPromptClient):
+    _client_class: type[AsyncAzureOpenAI] | type[AsyncOpenAI]
     _config: OpenAIConfig
 
     def __init__(self, client_class: str, config: Dict[str, Any]) -> None:
@@ -75,7 +76,7 @@ class OpenAIClient(IPromptClient):
 
     @lru_cache
     def _get_client_instance(self) -> AsyncOpenAI:
-        if isinstance(self._config, AzureOpenAIConfig):
+        if isinstance(self._client_class, AsyncAzureOpenAI):
             logger.info(
                 f"Using AOAI API {self._config.api_version} at {self._config.endpoint}"
                 + f" (max_parallel={self._config.max_parallel_requests})."
@@ -135,7 +136,7 @@ class OpenAIClient(IPromptClient):
                 await asyncio.sleep(1)
             except (openai.APIConnectionError, openai.APITimeoutError) as e:
                 if connection_errors > 2:
-                    if hasattr(self.config, "endpoint") and self._config.endpoint.startswith("http://localhost"):
+                    if hasattr(self._config, "endpoint") and self._config.endpoint.startswith("http://localhost"):
                         logger.error("Azure OpenAI API unreachable - have failed to start a local proxy?")
                     raise
                 if connection_errors == 0:
@@ -223,7 +224,7 @@ class OpenAIClient(IPromptClient):
                     await asyncio.sleep(1)
                 except (openai.APIConnectionError, openai.APITimeoutError):
                     if connection_errors > 2:
-                        if self._config.endpoint.startswith("http://localhost"):
+                        if hasattr(self._config, "endpoint") and self._config.endpoint.startswith("http://localhost"):
                             logger.error("Azure OpenAI API unreachable - have failed to start a local proxy?")
                         raise
                     logger.warning("Connectivity error on embeddings, retrying...")
@@ -239,10 +240,10 @@ class OpenAIClient(IPromptClient):
 
 
 class OpenAICacheClient(OpenAIClient):
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, client_class: str, config: Dict[str, Any]) -> None:
         # Don't cache tasks that have errored out.
         self.task_cache = ObjectCache[asyncio.Task](lambda t: not t.done() or t.exception() is None)
-        super().__init__(config)
+        super().__init__(client_class, config)
 
     def _create_completion_task(self, messages: ChatMessages, settings: Dict[str, Any]) -> asyncio.Task:
         """Create a new task only if no identical non-errored one was already cached."""

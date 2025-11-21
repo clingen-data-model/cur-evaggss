@@ -62,7 +62,7 @@ class SinglePMIDApp(IEvAggApp):
 
     def execute(self) -> None:
         # Get the papers that match this query.
-        papers = self._library.get_papers(self._pmid)
+        papers = self._library.get_papers({'pmid': self._pmid})
         assert len(papers) == 1
         logger.info(f"Found {len(papers)} papers for pmid: {self._pmid}")
         output_file = self._writer.write(self._extractor.extract(papers[0], self._gene_symbol))
