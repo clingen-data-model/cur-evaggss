@@ -44,27 +44,3 @@ async def test_openai_client_prompt(mock_openai, test_file_contents) -> None:
         temperature=1.5,
         model="gpt-8",
     )
-
-
-@patch("lib.evagg.llm.aoai.AsyncAzureOpenAI", return_value=AsyncMock())
-async def test_openai_client_embeddings(mock_openai) -> None:
-    embedding = MagicMock(data=[MagicMock(embedding=[0.4, 0.5, 0.6])], usage=MagicMock(prompt_tokens=10))
-    mock_openai.return_value.embeddings.create.return_value = embedding
-
-    inputs = [f"input_{i}" for i in range(1)]
-    client = OpenAIClient(
-        "AsyncAzureOpenAI",
-        {
-            "deployment": "gpt-8",
-            "endpoint": "https://ai",
-            "api_key": "test",
-            "api_version": "test",
-            "timeout": 60,
-        },
-    )
-    response = await client.embeddings(inputs)
-    mock_openai.assert_called_once_with(azure_endpoint="https://ai", api_key="test", api_version="test", timeout=60)
-    mock_openai.return_value.embeddings.create.assert_has_calls(
-        [call(input=[input], encoding_format="float", model="text-embedding-ada-002-v2") for input in inputs]
-    )
-    assert response == {input: [0.4, 0.5, 0.6] for input in inputs}

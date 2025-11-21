@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Dict, Optional, Protocol
 
 
 class IPromptClient(Protocol):
@@ -20,10 +20,4 @@ class IPromptClient(Protocol):
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Get the response from a prompt with an input file."""
-        ...  # pragma: no cover
-
-    async def embeddings(
-        self, inputs: List[str], embedding_settings: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, List[float]]:
-        """Get embeddings for the given inputs."""
         ...  # pragma: no cover
