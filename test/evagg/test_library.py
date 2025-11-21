@@ -42,7 +42,6 @@ def test_rare_disease_single_paper(mock_paper_client: Any, mock_llm_client: Any,
     query = {"gene_symbol": "gene"}
     allowed_categories = ["genetic disease", "other"]
     result = RareDiseaseFileLibrary(paper_client, llm_client, allowed_categories).get_papers(query)
-    print("result", result)
     assert len(result) == 1
     assert result[0] == rare_disease_paper
 
@@ -283,11 +282,11 @@ def test_single_paper_library(mock_paper_client: Any):
     library = SinglePaperLibrary(
         mock_paper_client(paper1, paper2a, paper2b),
     )
-    results1 = library.get_papers("pmid1")
+    results1 = library.get_papers({"pmid": "pmid1"})
     assert len(results1) == 1
     assert paper1 in results1
 
-    results2 = library.get_papers("pmid2a")
+    results2 = library.get_papers({"pmid": "pmid2a"})
     assert len(results2) == 1
     assert paper2a in results2
     assert paper2b not in results2
