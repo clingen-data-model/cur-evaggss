@@ -87,15 +87,15 @@ class RareDiseaseFileLibrary(IGetPapers):
 
     async def _get_llm_category(self, paper: Paper, gene: str) -> str:
         """Categorize papers based on LLM prompts."""
-        positive_examples = [POSITIVE_EXAMPLES_INTRO]
-        negative_examples = [NEGATIVE_EXAMPLES_INTRO]
         # Build a list of examples using the text of whichever example in each pair doesn't match the current gene.
-        positive_examples += [e[0].text if e[0].gene != gene else e[1].text for e in POSITIVE_EXAMPLES]
-        negative_examples += [e[0].text if e[0].gene != gene else e[1].text for e in NEGATIVE_EXAMPLES]
+        positive_examples = [e[0].text if e[0].gene != gene else e[1].text for e in POSITIVE_EXAMPLES]
+        negative_examples = [e[0].text if e[0].gene != gene else e[1].text for e in NEGATIVE_EXAMPLES]
 
         parameters = {
             "abstract": paper.props.get("abstract") or "no abstract",
             "title": paper.props.get("title") or "no title",
+            "positive_examples_intro": POSITIVE_EXAMPLES_INTRO,
+            "negative_examples_intro": NEGATIVE_EXAMPLES_INTRO,
             "positive_examples": "".join(positive_examples),
             "negative_examples": "".join(negative_examples) if self.include_negative_examples else "",
         }

@@ -15,7 +15,8 @@ Provide your response as a single string: "genetic disease" or "other" based on 
  
 When considering the provided criteria, remember to focus on the content of the title and abstract without overfitting to specific examples. The goal is to ensure high precision and recall for identifying genetic disease papers in general.
 
+{{$positive_examples_intro}}
 {{$positive_examples}}
 
-
+{{$negative_examples_intro}}
 {{$negative_examples}}

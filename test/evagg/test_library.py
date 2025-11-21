@@ -42,7 +42,6 @@ def test_rare_disease_single_paper(mock_paper_client: Any, mock_llm_client: Any,
     query = {"gene_symbol": "gene"}
     allowed_categories = ["genetic disease", "other"]
     result = RareDiseaseFileLibrary(paper_client, llm_client, allowed_categories).get_papers(query)
-    print("result", result)
     assert len(result) == 1
     assert result[0] == rare_disease_paper
 
