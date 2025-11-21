@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Type, NamedTuple
+from typing import Any, NamedTuple, Type
 
 from jinja2 import Environment, FileSystemLoader
+from pydantic import BaseModel
 
-from lib.evagg.prompts.models import *
+from lib.evagg.prompts.models.observations import CheckPatientsInput, CheckPatientsResponse
 
 # Templates relative to this __init__.py
 template_dir = Path(__file__).parent / "templates"
@@ -15,7 +16,7 @@ class PromptSpec(NamedTuple):
     input_model: Type[BaseModel]
     output_model: Type[BaseModel]
 
-    def render_template(self, **kwargs) -> str:
+    def render_template(self, **kwargs: Any) -> str:
         validated = self.input_model(**kwargs)
         template = env.get_template(self.template_name)
         return template.render(**validated.dict())

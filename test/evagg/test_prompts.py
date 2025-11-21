@@ -26,5 +26,5 @@ def test_render_template_invalid_input():
     with pytest.raises(ValidationError):
         spec.render_template(
             patient="proband",
-            extra="not allowed",   # also violates Extra.forbid
+            extra="not allowed",  # also violates Extra.forbid
         )
