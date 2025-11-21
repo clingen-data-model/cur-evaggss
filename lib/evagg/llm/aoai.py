@@ -57,15 +57,15 @@ class AzureOpenAIConfig(OpenAIConfig):
 
 
 class OpenAIClient(IPromptClient):
-    _client_class: type[AsyncOpenAI] | type[AsyncAzureOpenAI]
-    _config: OpenAIConfig | AzureOpenAIConfig
+    _config: OpenAIConfig
+    _use_azure: bool
 
     def __init__(self, client_class: str, config: Dict[str, Any]) -> None:
         if client_class == "AsyncOpenAI":
-            self._client_class = AsyncOpenAI
+            self._use_azure = False
             self._config = OpenAIConfig(**config)
         elif client_class == "AsyncAzureOpenAI":
-            self._client_class = AsyncAzureOpenAI
+            self._use_azure = True
             self._config = AzureOpenAIConfig(**config)
         else:
             raise ValueError(f"Unknown client class: {client_class}")
@@ -75,27 +75,28 @@ class OpenAIClient(IPromptClient):
         return self._get_client_instance()
 
     @lru_cache
-    def _get_client_instance(self) -> AsyncOpenAI | AsyncAzureOpenAI:
-        if self._client_class is AsyncAzureOpenAI:
+    def _get_client_instance(self) -> AsyncOpenAI:
+        if self._use_azure:
+            assert isinstance(self._config, AzureOpenAIConfig)
             logger.info(
                 f"Using AOAI API {self._config.api_version} at {self._config.endpoint}"
                 + f" (max_parallel={self._config.max_parallel_requests})."
             )
             if self._config.token_provider:
-                return self._client_class(
+                return AsyncAzureOpenAI(
                     azure_endpoint=self._config.endpoint,
                     azure_ad_token_provider=self._config.token_provider,
                     api_version=self._config.api_version,
                     timeout=self._config.timeout,
                 )
-            return self._client_class(
+            return AsyncAzureOpenAI(
                 azure_endpoint=self._config.endpoint,
                 api_key=self._config.api_key,
                 api_version=self._config.api_version,
                 timeout=self._config.timeout,
             )
         logger.info("Using AsyncOpenAI" + f" (max_parallel={self._config.max_parallel_requests}).")
-        return self._client_class(
+        return AsyncOpenAI(
             api_key=self._config.api_key,
             timeout=self._config.timeout,
         )
