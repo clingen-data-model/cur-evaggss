@@ -21,7 +21,7 @@ async def test_openai_client_prompt(mock_openai, test_file_contents) -> None:
             "api_key": "test",
             "api_version": "test",
             "timeout": 60,
-        }
+        },
     )
     with patch("builtins.open", mock_open(read_data=prompt_template)):
         response = await client.prompt_file(
@@ -60,7 +60,7 @@ async def test_openai_client_embeddings(mock_openai) -> None:
             "api_key": "test",
             "api_version": "test",
             "timeout": 60,
-        }
+        },
     )
     response = await client.embeddings(inputs)
     mock_openai.assert_called_once_with(azure_endpoint="https://ai", api_key="test", api_version="test", timeout=60)
