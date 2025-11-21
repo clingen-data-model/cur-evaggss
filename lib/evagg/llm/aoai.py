@@ -57,8 +57,8 @@ class AzureOpenAIConfig(OpenAIConfig):
 
 
 class OpenAIClient(IPromptClient):
-    _client_class: type[AsyncAzureOpenAI] | type[AsyncOpenAI]
-    _config: OpenAIConfig
+    _client_class: type[AsyncOpenAI] | type[AsyncAzureOpenAI]
+    _config: OpenAIConfig | AzureOpenAIConfig
 
     def __init__(self, client_class: str, config: Dict[str, Any]) -> None:
         if client_class == "AsyncOpenAI":
@@ -75,8 +75,8 @@ class OpenAIClient(IPromptClient):
         return self._get_client_instance()
 
     @lru_cache
-    def _get_client_instance(self) -> AsyncOpenAI:
-        if isinstance(self._client_class, AsyncAzureOpenAI):
+    def _get_client_instance(self) -> AsyncOpenAI | AsyncAzureOpenAI:
+        if self._client_class is AsyncAzureOpenAI:
             logger.info(
                 f"Using AOAI API {self._config.api_version} at {self._config.endpoint}"
                 + f" (max_parallel={self._config.max_parallel_requests})."

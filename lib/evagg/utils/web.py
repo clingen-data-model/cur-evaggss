@@ -33,7 +33,7 @@ class WebClientSettings(BaseModel, extra=Extra.forbid):
         return value
 
 
-class RequestsWebContentClient():
+class RequestsWebContentClient:
     """A web content client that uses the requests/urllib3 libraries."""
 
     def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
