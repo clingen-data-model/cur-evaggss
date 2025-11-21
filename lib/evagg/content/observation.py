@@ -42,22 +42,12 @@ class ObservationFinder(IFindObservations):
     async def _run_json_prompt(
         self, prompt_filepath: str, params: Dict[str, str], prompt_settings: Dict[str, Any]
     ) -> Dict[str, Any]:
-        default_settings = {
-            "max_tokens": 2048,
-            "prompt_tag": "observation",
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "response_format": {"type": "json_object"},
-        }
-        prompt_settings = {**default_settings, **prompt_settings}
-
         response = await self._llm_client.prompt_file(
             user_prompt_file=prompt_filepath,
             system_prompt=self._SYSTEM_PROMPT,
             params=params,
             prompt_settings=prompt_settings,
         )
-
         try:
             result = json.loads(response)
         except json.decoder.JSONDecodeError:

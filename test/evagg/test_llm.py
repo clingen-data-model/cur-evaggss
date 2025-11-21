@@ -42,5 +42,7 @@ async def test_openai_client_prompt(mock_openai, test_file_contents) -> None:
         frequency_penalty=0,
         presence_penalty=0,
         temperature=1.5,
+        top_p=0.95,
+        response_format={'type': 'json_object'},
         model="gpt-8",
     )

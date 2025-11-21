@@ -38,14 +38,6 @@ class PromptBasedContentExtractor(IExtractFields):
     # Read the system prompt from file
     _SYSTEM_PROMPT = open(_get_prompt_file_path("system")).read()
 
-    _DEFAULT_PROMPT_SETTINGS = {
-        "max_tokens": 2048,
-        "prompt_tag": "observation",
-        "temperature": 0.7,
-        "top_p": 0.95,
-        "response_format": {"type": "json_object"},
-    }
-
     def __init__(
         self,
         fields: Sequence[str],
@@ -53,16 +45,12 @@ class PromptBasedContentExtractor(IExtractFields):
         observation_finder: IFindObservations,
         phenotype_searcher: ISearchHPO,
         phenotype_fetcher: IFetchHPO,
-        prompt_settings: Dict[str, Any] | None = None,
     ) -> None:
         self._fields = fields
         self._llm_client = llm_client
         self._observation_finder = observation_finder
         self._phenotype_searcher = phenotype_searcher
         self._phenotype_fetcher = phenotype_fetcher
-        self._instance_prompt_settings = (
-            {**self._DEFAULT_PROMPT_SETTINGS, **prompt_settings} if prompt_settings else self._DEFAULT_PROMPT_SETTINGS
-        )
 
     def _get_lookup_field(self, gene_symbol: str, paper: Paper, ob: Observation, field: str) -> Tuple[str, str]:
         if field == "evidence_id":
@@ -110,16 +98,12 @@ class PromptBasedContentExtractor(IExtractFields):
     async def _run_json_prompt(
         self, prompt_filepath: str, params: Dict[str, str], prompt_settings: Dict[str, Any]
     ) -> Dict[str, Any]:
-
-        prompt_settings = {**self._instance_prompt_settings, **prompt_settings}
-
         response = await self._llm_client.prompt_file(
             user_prompt_file=prompt_filepath,
             system_prompt=self._SYSTEM_PROMPT,
             params=params,
             prompt_settings=prompt_settings,
         )
-
         try:
             result = json.loads(response)
         except json.JSONDecodeError:

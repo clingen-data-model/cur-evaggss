@@ -21,6 +21,16 @@ from .interfaces import IPromptClient
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PROMPT_SETTINGS = {
+    "max_tokens": 1024,
+    "prompt_tag": "observation",
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "response_format": {"type": "json_object"},
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+}
+
 
 class ChatMessages:
     _messages: List[ChatCompletionMessageParam]
@@ -183,14 +193,10 @@ class OpenAIClient(IPromptClient):
             messages.insert(0, ChatCompletionSystemMessageParam(role="system", content=system_prompt))
 
         settings = {
-            "max_tokens": 1024,
-            "frequency_penalty": 0,
-            "presence_penalty": 0,
-            "temperature": 0.7,
+            **DEFAULT_PROMPT_SETTINGS,
             "model": self._config.deployment,
             **(prompt_settings or {}),
         }
-
         return await self._generate_completion(messages, settings)
 
     async def prompt_file(
