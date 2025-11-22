@@ -203,7 +203,7 @@ def test_prompt_based_content_extractor_invalid_model_response(
         paper_id=fields["paper_id"],
     )
 
-    prompts = mock_prompt("{invalid json")
+    prompts = mock_prompt({})
     pheno_searcher = mock_phenotype_searcher([])
     pheno_fetcher = mock_phenotype_fetcher()
     content_extractor = PromptBasedContentExtractor(

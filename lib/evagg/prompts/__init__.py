@@ -6,7 +6,7 @@ from pydantic import BaseModel, Extra
 
 # Templates relative to this __init__.py
 template_dir = Path(__file__).parent / "templates"
-env = Environment(loader=FileSystemLoader(str(template_dir)))
+env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
 
 
 class EmptyModel(BaseModel, extra=Extra.forbid):

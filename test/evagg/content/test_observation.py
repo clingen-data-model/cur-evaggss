@@ -49,7 +49,7 @@ def test_sanity_check_failure(
     assert result == []
 
     # Paper passes sanity check, but only because json is unparsable.
-    llm_client = mock_llm_client("unparsable json", {})
+    llm_client = mock_llm_client({}, {})
     of = ObservationFinder(llm_client, mock_factory(None), mock_comparator({}))
     # Paper has no full text, no observations should be found.
     result = asyncio.run(of.find_observations("gene", paper))
