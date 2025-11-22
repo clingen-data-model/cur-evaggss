@@ -116,9 +116,11 @@ def test_find_observations_many_patients(
         # Note, we're not guaranteed that the patient we filtered above is proband 6, but we can enforce it with the
         # next LLM call.
         {
-            "proband 1": ["c.530C > T"], "proband 2": ["c.530C > T"],
-            "proband 3": ["c.530C > T"], "proband 4": ["c.530C > T"],
-            "proband 5": ["c.530C > T"]
+            "proband 1": ["c.530C > T"],
+            "proband 2": ["c.530C > T"],
+            "proband 3": ["c.530C > T"],
+            "proband 4": ["c.530C > T"],
+            "proband 5": ["c.530C > T"],
         },  # _link_entities -> _run_json_prompt
     )
     variant = HGVSVariant("c.530C > T", "EBF3", "NM_001005463.2", False, True, None, None, [])
@@ -690,7 +692,7 @@ def test_find_observations_linking_edge_cases(
         {"variants": []},  # _find_variant_descriptions -> _run_json_prompt (table 1)
         {"patients": ["proband"]},  # _find_patients -> _run_json_prompt (main text)
         {"patients": []},  # _find_patients -> _run_json_prompt (table 1)
-        {"proband": ["c.530C>T"], "unmatched_variants":["c.530C>T"]},  # _link_entities -> _run_json_prompt
+        {"proband": ["c.530C>T"], "unmatched_variants": ["c.530C>T"]},  # _link_entities -> _run_json_prompt
     )
 
     # Reuse DeterministicMockFactory from above.

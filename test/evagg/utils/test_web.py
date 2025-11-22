@@ -42,8 +42,9 @@ def test_get_content_types(mock_request):
         RequestsWebContentClient(settings={"content_type": "binary"})
 
     web_client = RequestsWebContentClient()
-    assert web_client.get("https://any.url/testing", content_type="text", url_extra="&extra") == "test"
-    assert mock_request.call_args.args[1] == "https://any.url/testing&extra"
+    assert web_client.get("https://any.url/testing", content_type="text", params={"extra": ""}) == "test"
+    assert mock_request.call_args.args[1] == "https://any.url/testing"
+    assert mock_request.call_args.kwargs["params"] == {"extra": ""}
     assert web_client.get("https://any.url/testing", content_type="xml").tag == "test"  # type: ignore
     assert web_client.get("https://any.url/testing", content_type="json") == {"test": 1}
     with raises(ValueError):
@@ -112,11 +113,11 @@ def test_cosmos_cache_hit(mock_client, mock_container):
 
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=CPA6&sort=relevance&retmax=1&tool=biopython"  # noqa
     web_client = CosmosCachingWebClient(cache_settings={"endpoint": "http://localhost", "credential": "test"})
-    assert web_client.get(url, content_type="xml", url_extra="this doesn't matter").tag == "eSearchResult"
+    assert web_client.get(url, content_type="xml", params={"this doesn't matter": ""}).tag == "eSearchResult"
     assert web_client.get(url, content_type="xml").tag == "eSearchResult"
 
     url = "https://api.ncbi.nlm.nih.gov/datasets/v2alpha/gene/symbol/CPA6/taxon/Human"
-    assert web_client.get(url, content_type="json", url_extra="extra")["reports"][0]["query"][0] == "CPA6"
+    assert web_client.get(url, content_type="json", params={"extra": ""})["reports"][0]["query"][0] == "CPA6"
     assert web_client.get(url, content_type="json")["reports"][0]["query"][0] == "CPA6"
 
     assert len(mock_container.misses) == 0
@@ -141,16 +142,16 @@ def test_cosmos_cache_miss(mock_client, mock_request, mock_container):
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=GGG6&sort=relevance&retmax=1&tool=biopython"  # noqa
     web_client = CosmosCachingWebClient(cache_settings={"endpoint": "http://localhost", "credential": "test"})
     web_client.update_settings(retry_codes=[500], no_raise_codes=[422])
-    assert web_client.get(url, content_type="xml", url_extra="this doesn't matter").tag == "eSearchResult"
+    assert web_client.get(url, content_type="xml", params={"this doesn't matter": ""}).tag == "eSearchResult"
     assert web_client.get(url, content_type="xml").tag == "eSearchResult"
 
     url = "https://api.ncbi.nlm.nih.gov/datasets/v2alpha/gene/symbol/GGG6/taxon/Human"
-    assert web_client.get(url, content_type="json", url_extra="extra")["reports"][0]["query"][0] == "GGG6"
+    assert web_client.get(url, content_type="json", params={"extra": ""})["reports"][0]["query"][0] == "GGG6"
     assert web_client.get(url, content_type="json")["reports"][0]["query"][0] == "GGG6"
 
     url = "https://testing.invalid/invalid/422"
-    assert web_client.get(url, content_type="json", url_extra="extra")["error"] == "invalid query, no throw"
-    assert web_client.get(url, content_type="json", url_extra="extra")["error"] == "invalid query, no throw"
+    assert web_client.get(url, content_type="json", params={"extra": ""})["error"] == "invalid query, no throw"
+    assert web_client.get(url, content_type="json", params={"extra": ""})["error"] == "invalid query, no throw"
     url = "https://testing.invalid/invalid/500"
     with raises(requests.exceptions.HTTPError):
         web_client.get(url, content_type="json")
