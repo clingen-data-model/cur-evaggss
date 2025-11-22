@@ -14,12 +14,23 @@ from openai.types.chat import (
 )
 from pydantic import BaseModel
 
+from lib.evagg.prompts import PROMPT_REGISTRY
 from lib.evagg.utils.cache import ObjectCache
 from lib.evagg.utils.logging import PROMPT
 
 from .interfaces import IPromptClient
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_PROMPT_SETTINGS = {
+    "max_tokens": 1024,
+    "prompt_tag": "observation",
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "response_format": {"type": "json_object"},
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+}
 
 
 class ChatMessages:
@@ -170,7 +181,6 @@ class OpenAIClient(IPromptClient):
     async def prompt(
         self,
         user_prompt: str,
-        system_prompt: Optional[str] = None,
         params: Optional[Dict[str, str]] = None,
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> str:
@@ -179,29 +189,46 @@ class OpenAIClient(IPromptClient):
         user_prompt = reduce(lambda x, kv: x.replace(f"{{{{${kv[0]}}}}}", kv[1]), (params or {}).items(), user_prompt)
 
         messages: ChatMessages = ChatMessages([ChatCompletionUserMessageParam(role="user", content=user_prompt)])
-        if system_prompt:
-            messages.insert(0, ChatCompletionSystemMessageParam(role="system", content=system_prompt))
+        messages.insert(
+            0, ChatCompletionSystemMessageParam(role="system", content=PROMPT_REGISTRY["system"].render_template())
+        )
 
         settings = {
-            "max_tokens": 1024,
-            "frequency_penalty": 0,
-            "presence_penalty": 0,
-            "temperature": 0.7,
+            **DEFAULT_PROMPT_SETTINGS,
             "model": self._config.deployment,
             **(prompt_settings or {}),
         }
-
         return await self._generate_completion(messages, settings)
 
     async def prompt_file(
         self,
-        user_prompt_file: str,
-        system_prompt: Optional[str] = None,
+        prompt_filepath: str,
         params: Optional[Dict[str, str]] = None,
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> str:
-        user_prompt = self._load_prompt_file(user_prompt_file)
-        return await self.prompt(user_prompt, system_prompt, params, prompt_settings)
+        return await self.prompt(
+            self._load_prompt_file(prompt_filepath),
+            params,
+            prompt_settings,
+        )
+
+    async def prompt_json(
+        self,
+        prompt_filepath: str,
+        params: Optional[Dict[str, str]] = None,
+        prompt_settings: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        response = await self.prompt_file(
+            prompt_filepath=prompt_filepath,
+            params=params,
+            prompt_settings=prompt_settings,
+        )
+        try:
+            result = json.loads(response)
+        except json.decoder.JSONDecodeError:
+            logger.error(f"Failed to parse response from LLM to {prompt_filepath}: {response}")
+            return {}
+        return result
 
 
 class OpenAICacheClient(OpenAIClient):

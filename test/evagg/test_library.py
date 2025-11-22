@@ -145,7 +145,7 @@ def test_rare_disease_get_papers(mock_paper_client: Any, mock_llm_client: Any, j
     result = RareDiseaseFileLibrary(paper_client, llm_client, allowed_categories).get_papers(query)
     assert paper_client.last_call("search") == ({"query": "gene pubmed pmc open access[filter]"},)
     assert paper_client.last_call("fetch") == (other_paper.props["pmid"], {"include_fulltext": True})
-    assert llm_client.last_call("prompt_file")[2]["params"]["abstract"] == "We report on ..."
+    assert llm_client.last_call("prompt_file")[1]["params"]["abstract"] == "We report on ..."
     assert result and len(result) == 2
     assert result[0] == rare_disease_paper
 

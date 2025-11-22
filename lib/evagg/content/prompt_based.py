@@ -35,17 +35,6 @@ class PromptBasedContentExtractor(IExtractFields):
     _CACHE_INDIVIDUAL_FIELDS = ["phenotype"]
     _CACHE_PAPER_FIELDS = ["study_type"]
 
-    # Read the system prompt from file
-    _SYSTEM_PROMPT = open(_get_prompt_file_path("system")).read()
-
-    _DEFAULT_PROMPT_SETTINGS = {
-        "max_tokens": 2048,
-        "prompt_tag": "observation",
-        "temperature": 0.7,
-        "top_p": 0.95,
-        "response_format": {"type": "json_object"},
-    }
-
     def __init__(
         self,
         fields: Sequence[str],
@@ -53,16 +42,12 @@ class PromptBasedContentExtractor(IExtractFields):
         observation_finder: IFindObservations,
         phenotype_searcher: ISearchHPO,
         phenotype_fetcher: IFetchHPO,
-        prompt_settings: Dict[str, Any] | None = None,
     ) -> None:
         self._fields = fields
         self._llm_client = llm_client
         self._observation_finder = observation_finder
         self._phenotype_searcher = phenotype_searcher
         self._phenotype_fetcher = phenotype_fetcher
-        self._instance_prompt_settings = (
-            {**self._DEFAULT_PROMPT_SETTINGS, **prompt_settings} if prompt_settings else self._DEFAULT_PROMPT_SETTINGS
-        )
 
     def _get_lookup_field(self, gene_symbol: str, paper: Paper, ob: Observation, field: str) -> Tuple[str, str]:
         if field == "evidence_id":
@@ -107,27 +92,6 @@ class PromptBasedContentExtractor(IExtractFields):
             raise ValueError(f"Unsupported field: {field}")
         return field, value
 
-    async def _run_json_prompt(
-        self, prompt_filepath: str, params: Dict[str, str], prompt_settings: Dict[str, Any]
-    ) -> Dict[str, Any]:
-
-        prompt_settings = {**self._instance_prompt_settings, **prompt_settings}
-
-        response = await self._llm_client.prompt_file(
-            user_prompt_file=prompt_filepath,
-            system_prompt=self._SYSTEM_PROMPT,
-            params=params,
-            prompt_settings=prompt_settings,
-        )
-
-        try:
-            result = json.loads(response)
-        except json.JSONDecodeError:
-            logger.warning(f"Failed to parse response from LLM to {prompt_filepath}: {response}")
-            return {}
-
-        return result
-
     async def _convert_phenotype_to_hpo(self, phenotype: List[str]) -> List[str]:
         """Convert a list of unstructured phenotype descriptions to HPO/OMIM terms."""
         if not phenotype:
@@ -156,8 +120,8 @@ class PromptBasedContentExtractor(IExtractFields):
                 candidates.add(candidate)
 
             if candidates:
-                response = await self._run_json_prompt(
-                    _get_prompt_file_path("phenotypes_candidates"),
+                response = await self._llm_client.prompt_json(
+                    prompt_filepath=_get_prompt_file_path("phenotypes_candidates"),
                     params={"term": term, "candidates": "\n".join(candidates)},
                     prompt_settings={"prompt_tag": "phenotypes_candidates"},
                 )
@@ -175,8 +139,8 @@ class PromptBasedContentExtractor(IExtractFields):
 
         # Before we give up, try again with a simplified version of the term.
         for term in phenotype.copy():
-            response = await self._run_json_prompt(
-                _get_prompt_file_path("phenotypes_simplify"),
+            response = await self._llm_client.prompt_json(
+                prompt_filepath=_get_prompt_file_path("phenotypes_simplify"),
                 params={"term": term},
                 prompt_settings={"prompt_tag": "phenotypes_simplify"},
             )
@@ -199,7 +163,7 @@ class PromptBasedContentExtractor(IExtractFields):
     async def _observation_phenotypes_for_text(
         self, text: str, description: str, metadata: Dict[str, str]
     ) -> List[str]:
-        all_phenotypes_result = await self._run_json_prompt(
+        all_phenotypes_result = await self._llm_client.prompt_json(
             self._PROMPT_FIELDS["phenotype"],
             {"passage": text},
             {"prompt_tag": "phenotypes_all", "max_tokens": 4096, "prompt_metadata": metadata},
@@ -214,7 +178,7 @@ class PromptBasedContentExtractor(IExtractFields):
             "observation": description,
             "candidates": ", ".join(all_phenotypes),
         }
-        observation_phenotypes_result = await self._run_json_prompt(
+        observation_phenotypes_result = await self._llm_client.prompt_json(
             _get_prompt_file_path("phenotypes_observation"),
             observation_phenotypes_params,
             {"prompt_tag": "phenotypes_observation", "prompt_metadata": metadata},
@@ -222,7 +186,7 @@ class PromptBasedContentExtractor(IExtractFields):
         if (observation_phenotypes := observation_phenotypes_result.get("phenotypes", [])) == []:
             return []
 
-        observation_acronymns_result = await self._run_json_prompt(
+        observation_acronymns_result = await self._llm_client.prompt_json(
             _get_prompt_file_path("phenotypes_acronyms"),
             {"passage": text, "phenotypes": ", ".join(observation_phenotypes)},
             {"prompt_tag": "phenotypes_acronyms", "prompt_metadata": metadata},
@@ -270,7 +234,7 @@ class PromptBasedContentExtractor(IExtractFields):
             "prompt_tag": field,
             "prompt_metadata": {"gene_symbol": gene_symbol, "paper_id": observation.paper_id},
         }
-        return await self._run_json_prompt(self._PROMPT_FIELDS[field], params, prompt_settings)
+        return await self._llm_client.prompt_json(self._PROMPT_FIELDS[field], params, prompt_settings)
 
     async def _generate_basic_field(self, gene_symbol: str, observation: Observation, field: str) -> str:
         result = (await self._run_field_prompt(gene_symbol, observation, field)).get(field, "failed")
