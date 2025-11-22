@@ -90,12 +90,12 @@ def test_prompt_based_content_extractor_valid_fields(
     )
 
     prompts = mock_prompt(
-        json.dumps({"zygosity": fields["zygosity"]}),
-        json.dumps({"variant_inheritance": fields["variant_inheritance"]}),
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_observation, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_acronyms, only one text, so only once.
-        json.dumps({"match": "test (HP:0123)"}),
+        {"zygosity": fields["zygosity"]},
+        {"variant_inheritance": fields["variant_inheritance"]},
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_observation, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_acronyms, only one text, so only once.
+        {"match": "test (HP:0123)"},
     )
     pheno_searcher = mock_phenotype_searcher(
         [{"id": "HP:0123", "name": "test", "definition": "test", "synonyms": "test"}]
@@ -106,7 +106,7 @@ def test_prompt_based_content_extractor_valid_fields(
     )
     content = content_extractor.extract(paper, fields["gene"])
 
-    assert prompts.call_count("prompt_file") == 6
+    assert prompts.call_count("prompt_json") == 6
     assert len(content) == 1
     for key in fields:
         assert content[0][key] == fields[key]
@@ -238,9 +238,9 @@ def test_prompt_based_content_extractor_phenotype_empty_list(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_observation, only one text, so only once.
-        json.dumps({"phenotypes": []}),  # phenotypes_acronyms, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_observation, only one text, so only once.
+        {"phenotypes": []},  # phenotypes_acronyms, only one text, so only once.
     )
     content_extractor = PromptBasedContentExtractor(
         list(fields.keys()),
@@ -278,9 +278,9 @@ def test_prompt_based_content_extractor_phenotype_hpo_description(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_observation, only one text, so only once.
-        json.dumps({"phenotypes": ["HP:012345"]}),  # phenotypes_acronyms, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_observation, only one text, so only once.
+        {"phenotypes": ["HP:012345"]},  # phenotypes_acronyms, only one text, so only once.
     )
 
     phenotype_fetcher = mock_phenotype_fetcher({"id": "HP:012345", "name": "test"})
@@ -320,10 +320,10 @@ def test_prompt_based_content_extractor_phenotype_empty_pheno_search(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_observation, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_acronyms, only one text, so only once.
-        json.dumps({}),  # phenotypes_simplify, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_observation, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_acronyms, only one text, so only once.
+        {},  # phenotypes_simplify, only one text, so only once.
     )
 
     content_extractor = PromptBasedContentExtractor(
@@ -362,12 +362,12 @@ def test_prompt_based_content_extractor_phenotype_simplification(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_observation, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_acronyms, only one text, so only once.
-        json.dumps({}),  # phenotypes_candidates, initial value
-        json.dumps({"simplified": ["test_simplified"]}),  # phenotypes_simplify, only one text, so only once.
-        json.dumps({"match": "test_simplified (HP:0321)"}),  # phenotypes_candidates, simplified value
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_observation, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_acronyms, only one text, so only once.
+        {},  # phenotypes_candidates, initial value
+        {"simplified": ["test_simplified"]},  # phenotypes_simplify, only one text, so only once.
+        {"match": "test_simplified (HP:0321)"},  # phenotypes_candidates, simplified value
     )
 
     pheno_searcher = mock_phenotype_searcher(
@@ -410,7 +410,7 @@ def test_prompt_based_content_extractor_phenotype_no_results_in_text(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": []}),  # phenotypes_all, only one text, so only once.
+        {"phenotypes": []},  # phenotypes_all, only one text, so only once.
     )
 
     content_extractor = PromptBasedContentExtractor(
@@ -449,8 +449,8 @@ def test_prompt_based_content_extractor_phenotype_no_results_for_observation(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": []}),  # phenotypes_obs, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": []},  # phenotypes_obs, only one text, so only once.
     )
 
     content_extractor = PromptBasedContentExtractor(
@@ -489,7 +489,7 @@ def test_prompt_based_content_extractor_phenotype_specific_individual(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": []}),  # phenotypes_all, only one text, so only once.
+        {"phenotypes": []},  # phenotypes_all, only one text, so only once.
     )
 
     content_extractor = PromptBasedContentExtractor(
@@ -531,8 +531,8 @@ def test_prompt_based_content_extractor_phenotype_table_texts(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": []}),  # phenotypes_all, two texts
-        json.dumps({"phenotypes": []}),  # phenotypes_all
+        {"phenotypes": []},  # phenotypes_all, two texts
+        {"phenotypes": []},  # phenotypes_all
     )
 
     content_extractor = PromptBasedContentExtractor(
@@ -544,7 +544,7 @@ def test_prompt_based_content_extractor_phenotype_table_texts(
     )
     content = content_extractor.extract(paper, fields["gene"])
 
-    assert prompts.call_count("prompt_file") == 2  # ensure both prompts were used.
+    assert prompts.call_count("prompt_json") == 2  # ensure both prompts were used.
     assert len(content) == 1
     for key in fields:
         assert content[0][key] == fields[key]
@@ -559,7 +559,7 @@ def test_prompt_based_content_extractor_json_prompt_response(
         "hgvs_c": "c.1234A>G",
         "paper_variant": "c.1234A>G",
         "individual_id": "unknown",
-        "zygosity": json.dumps({"zygosity": {"key": "value"}}),
+        "zygosity": {"zygosity": {"key": "value"}},
     }
 
     observation = Observation(
@@ -614,9 +614,9 @@ def test_prompt_based_content_extractor_functional_study(
     )
 
     prompts = mock_prompt(
-        json.dumps({"functional_study": ["cell line", "patient cells"]}),
-        json.dumps({"functional_study": ["patient cells"]}),
-        json.dumps({"functional_study": ["none"]}),
+        {"functional_study": ["cell line", "patient cells"]},
+        {"functional_study": ["patient cells"]},
+        {"functional_study": ["none"]},
     )
     content_extractor = PromptBasedContentExtractor(
         list(fields.keys()),
@@ -679,10 +679,10 @@ def test_prompt_based_content_extractor_field_caching_phenotype(
     )
 
     prompts = mock_prompt(
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_all, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_observation, only one text, so only once.
-        json.dumps({"phenotypes": ["test"]}),  # phenotypes_acronyms, only one text, so only once.
-        json.dumps({"match": "test i1 (HP:0123)"}),
+        {"phenotypes": ["test"]},  # phenotypes_all, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_observation, only one text, so only once.
+        {"phenotypes": ["test"]},  # phenotypes_acronyms, only one text, so only once.
+        {"match": "test i1 (HP:0123)"},
     )
     observation_finder = mock_observation([observation1, observation2])
 
@@ -736,7 +736,7 @@ def test_prompt_based_content_extractor_field_caching_variant_type(
     )
     prompts = mock_prompt(
         # o1 variant_type
-        json.dumps({"variant_type": variant_type}),
+        {"variant_type": variant_type},
     )
     observation_finder = mock_observation([observation1, observation2])
     pheno_searcher = mock_phenotype_searcher()
@@ -797,7 +797,7 @@ def test_prompt_based_content_extractor_field_caching_study_type(
         paper_id=paper_id,
     )
     prompts = mock_prompt(
-        json.dumps({"study_type": study_type}),
+        {"study_type": study_type},
     )
     observation_finder = mock_observation([observation1, observation2])
     pheno_searcher = mock_phenotype_searcher()
@@ -858,7 +858,7 @@ def test_caching(
     )
 
     prompts = mock_prompt(
-        json.dumps({"study_type": study_type}),
+        {"study_type": study_type},
     )
     observation_finder = mock_observation([observation])
     pheno_searcher = mock_phenotype_searcher()

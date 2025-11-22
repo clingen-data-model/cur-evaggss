@@ -226,7 +226,7 @@ class OpenAIClient(IPromptClient):
         try:
             result = json.loads(response)
         except json.decoder.JSONDecodeError:
-            logger.error(f"Failed to parse response from LLM to {user_prompt_file}: {response}")
+            logger.error(f"Failed to parse response from LLM to {prompt_filepath}: {response}")
             return {}
         return result
 
