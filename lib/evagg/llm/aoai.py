@@ -180,7 +180,6 @@ class OpenAIClient(IPromptClient):
     async def prompt(
         self,
         user_prompt: str,
-        system_prompt: Optional[str] = None,
         params: Optional[Dict[str, str]] = None,
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> str:
@@ -189,8 +188,7 @@ class OpenAIClient(IPromptClient):
         user_prompt = reduce(lambda x, kv: x.replace(f"{{{{${kv[0]}}}}}", kv[1]), (params or {}).items(), user_prompt)
 
         messages: ChatMessages = ChatMessages([ChatCompletionUserMessageParam(role="user", content=user_prompt)])
-        if system_prompt:
-            messages.insert(0, ChatCompletionSystemMessageParam(role="system", content=system_prompt))
+        messages.insert(0, ChatCompletionSystemMessageParam(role="system", content=system_prompt))
 
         settings = {
             **DEFAULT_PROMPT_SETTINGS,
@@ -202,12 +200,29 @@ class OpenAIClient(IPromptClient):
     async def prompt_file(
         self,
         user_prompt_file: str,
-        system_prompt: Optional[str] = None,
         params: Optional[Dict[str, str]] = None,
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> str:
         user_prompt = self._load_prompt_file(user_prompt_file)
-        return await self.prompt(user_prompt, system_prompt, params, prompt_settings)
+        return await self.prompt(user_prompt, params, prompt_settings)
+
+    async def run_json_prompt(
+        self,
+        user_prompt_file: str,
+        params: Optional[Dict[str, str]] = None,
+        prompt_settings: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        response = await self.prompt_file(
+            user_prompt_file=user_prompt_file,
+            params=params,
+            prompt_settings=prompt_settings,
+        )
+        try:
+            result = json.loads(response)
+        except json.decoder.JSONDecodeError:
+            logger.error(f"Failed to parse response from LLM to {user_prompt_file}: {response}")
+            return {}
+        return result
 
 
 class OpenAICacheClient(OpenAIClient):

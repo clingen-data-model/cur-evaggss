@@ -26,7 +26,6 @@ async def test_openai_client_prompt(mock_openai, test_file_contents) -> None:
     with patch("builtins.open", mock_open(read_data=prompt_template)):
         response = await client.prompt_file(
             user_prompt_file="phenotype.txt",
-            system_prompt="Extract field",
             params=prompt_params,
             prompt_settings={"temperature": 1.5, "prompt_tag": "phenotype"},
         )
@@ -43,6 +42,6 @@ async def test_openai_client_prompt(mock_openai, test_file_contents) -> None:
         presence_penalty=0,
         temperature=1.5,
         top_p=0.95,
-        response_format={'type': 'json_object'},
+        response_format={"type": "json_object"},
         model="gpt-8",
     )

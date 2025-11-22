@@ -1,10 +1,9 @@
 import asyncio
-import json
 import logging
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 from lib.evagg.llm import IPromptClient
 from lib.evagg.types import HGVSVariant, ICreateVariants, Paper
@@ -26,9 +25,6 @@ def _get_content_prompt_file_path(name: str) -> str:
 
 
 class ObservationFinder(IFindObservations):
-    # Read the system prompt from file
-    _SYSTEM_PROMPT = open(_get_content_prompt_file_path("system")).read()
-
     def __init__(
         self,
         llm_client: IPromptClient,
@@ -39,29 +35,12 @@ class ObservationFinder(IFindObservations):
         self._variant_factory = variant_factory
         self._variant_comparator = variant_comparator
 
-    async def _run_json_prompt(
-        self, prompt_filepath: str, params: Dict[str, str], prompt_settings: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        response = await self._llm_client.prompt_file(
-            user_prompt_file=prompt_filepath,
-            system_prompt=self._SYSTEM_PROMPT,
-            params=params,
-            prompt_settings=prompt_settings,
-        )
-        try:
-            result = json.loads(response)
-        except json.decoder.JSONDecodeError:
-            logger.error(f"Failed to parse response from LLM to {prompt_filepath}: {response}")
-            return {}
-
-        return result
-
     async def _check_patients(self, patient_candidates: Sequence[str], texts_to_check: Sequence[str]) -> List[str]:
         checked_patients: List[str] = []
 
         async def check_patient(patient: str) -> None:
             for text in texts_to_check:
-                validation_response = await self._run_json_prompt(
+                validation_response = await self._llm_client.prompt_json(
                     prompt_filepath=_get_observation_prompt_file_path("check_patients"),
                     params={"text": text, "patient": patient},
                     prompt_settings={"prompt_tag": "observation__check_patients"},
@@ -79,7 +58,7 @@ class ObservationFinder(IFindObservations):
         self, paper_text: str, focus_texts: Sequence[str] | None, metadata: Dict[str, str]
     ) -> Sequence[str]:
         """Identify the individuals (human subjects) described in the full text of the paper."""
-        full_text_response = await self._run_json_prompt(
+        full_text_response = await self._llm_client.prompt_json(
             prompt_filepath=_get_observation_prompt_file_path("find_patients"),
             params={"text": paper_text},
             prompt_settings={"prompt_tag": "observation__find_patients", "prompt_metadata": metadata},
@@ -91,7 +70,7 @@ class ObservationFinder(IFindObservations):
         # we should ask the LLM to determine if these are the same individual.
 
         async def check_focus_text(focus_text: str) -> None:
-            focus_response = await self._run_json_prompt(
+            focus_response = await self._llm_client.prompt_json(
                 prompt_filepath=_get_observation_prompt_file_path("find_patients"),
                 params={"text": focus_text},
                 prompt_settings={"prompt_tag": "observation__find_patients", "prompt_metadata": metadata},
@@ -110,7 +89,7 @@ class ObservationFinder(IFindObservations):
 
         async def split_patient(patient: str) -> None:
             if any(term in patient for term in [" and ", " or "]):
-                split_response = await self._run_json_prompt(
+                split_response = await self._llm_client.prompt_json(
                     prompt_filepath=_get_observation_prompt_file_path("split_patients"),
                     params={"patient_list": f'"{patient}"'},  # Encase in double-quotes in prep for bulk calling.
                     prompt_settings={"prompt_tag": "observation__split_patients", "prompt_metadata": metadata},
@@ -158,7 +137,7 @@ class ObservationFinder(IFindObservations):
         """
         # Create prompts to find all the unique variants mentioned in the full text and focus texts.
         prompt_runs = [
-            self._run_json_prompt(
+            self._llm_client.prompt_json(
                 prompt_filepath=_get_observation_prompt_file_path("find_variants"),
                 params={"text": text, "gene_symbol": gene_symbol},
                 prompt_settings={"prompt_tag": "observation__find_variants", "prompt_metadata": metadata},
@@ -208,7 +187,7 @@ class ObservationFinder(IFindObservations):
         for i in reversed(range(len(candidates))):
             if "p." in candidates[i] and "c." in candidates[i]:
                 split_prompt_runs.append(
-                    self._run_json_prompt(
+                    self._llm_client.prompt_json(
                         prompt_filepath=_get_observation_prompt_file_path("split_variants"),
                         params={"variant_list": f'"{candidates[i]}"'},  # Encase in double-quotes for bulk calling.
                         prompt_settings={"prompt_tag": "observation__split_variants", "prompt_metadata": metadata},
@@ -224,7 +203,7 @@ class ObservationFinder(IFindObservations):
 
     async def _find_genome_build(self, paper_text: str, metadata: Dict[str, str]) -> str | None:
         """Identify the genome build used in the paper."""
-        response = await self._run_json_prompt(
+        response = await self._llm_client.prompt_json(
             prompt_filepath=_get_observation_prompt_file_path("find_genome_build"),
             params={"text": paper_text},
             prompt_settings={"prompt_tag": "observation__find_genome_build", "prompt_metadata": metadata},
@@ -241,7 +220,7 @@ class ObservationFinder(IFindObservations):
             "variants": ", ".join(variants),
             "gene_symbol": metadata["gene_symbol"],
         }
-        response = await self._run_json_prompt(
+        response = await self._llm_client.prompt_json(
             prompt_filepath=_get_observation_prompt_file_path("link_entities"),
             params=params,
             prompt_settings={"prompt_tag": "observation__link_entities", "prompt_metadata": metadata},
@@ -403,7 +382,7 @@ class ObservationFinder(IFindObservations):
 
     async def _sanity_check_paper(self, paper_text: str, gene_symbol: str, metadata: Dict[str, str]) -> bool:
         try:
-            result = await self._run_json_prompt(
+            result = await self._llm_client.prompt_json(
                 prompt_filepath=_get_observation_prompt_file_path("sanity_check"),
                 params={"text": paper_text, "gene": gene_symbol},
                 prompt_settings={
@@ -478,7 +457,7 @@ Note that this variant failed validation when considered as part of the gene of 
 variant isn't actually associated with the gene. But the possibility of previous error exists, so please check again.
 """
             if mentioning_text:
-                response = await self._run_json_prompt(
+                response = await self._llm_client.prompt_json(
                     prompt_filepath=_get_observation_prompt_file_path("check_variant"),
                     params={
                         "variant_descriptions": ", ".join(descriptions),
