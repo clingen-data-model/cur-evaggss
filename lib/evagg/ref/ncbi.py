@@ -172,7 +172,7 @@ class NcbiLookupClient(NcbiClientBase, IPaperLookupClient, IGeneLookupClient, IV
     # IPaperLookupClient
     def search(self, query: str, **extra_params: Dict[str, Any]) -> Sequence[str]:
         root = self._esearch(db="pubmed", term=query, sort="relevance", **extra_params)
-        pmids = [id.text for id in root.findall("./IdList/Id") if id.text]
+        pmids = [pmid_elem.text for pmid_elem in root.findall("./IdList/Id") if pmid_elem.text]
         return pmids
 
     def fetch(self, paper_id: str, include_fulltext: bool = False) -> Optional[Paper]:
