@@ -121,7 +121,7 @@ class PromptBasedContentExtractor(IExtractFields):
 
             if candidates:
                 response = await self._llm_client.prompt_json(
-                    _get_prompt_file_path("phenotypes_candidates"),
+                    prompt_filepath=_get_prompt_file_path("phenotypes_candidates"),
                     params={"term": term, "candidates": "\n".join(candidates)},
                     prompt_settings={"prompt_tag": "phenotypes_candidates"},
                 )
@@ -140,7 +140,7 @@ class PromptBasedContentExtractor(IExtractFields):
         # Before we give up, try again with a simplified version of the term.
         for term in phenotype.copy():
             response = await self._llm_client.prompt_json(
-                _get_prompt_file_path("phenotypes_simplify"),
+                prompt_filepath=_get_prompt_file_path("phenotypes_simplify"),
                 params={"term": term},
                 prompt_settings={"prompt_tag": "phenotypes_simplify"},
             )

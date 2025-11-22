@@ -13,7 +13,7 @@ class IPromptClient(Protocol):
 
     async def prompt_file(
         self,
-        user_prompt_file: str,
+        prompt_filepath: str,
         params: Optional[Dict[str, str]] = None,
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> str:
@@ -22,7 +22,7 @@ class IPromptClient(Protocol):
 
     async def prompt_json(
         self,
-        user_prompt_file: str,
+        prompt_filepath: str,
         params: Optional[Dict[str, str]] = None,
         prompt_settings: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
