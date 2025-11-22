@@ -248,14 +248,14 @@ class PromptBasedContentExtractor(IExtractFields):
         func_studies = result.get("functional_study", [])
 
         # Note the prompt uses a different set of strings to represent the study types found, so we need to map them.
-        map = {
+        study_type_map = {
             "engineered_cells": "cell line",
             "patient_cells_tissues": "patient cells",
             "animal_model": "animal model",
             "none": "none",
         }
 
-        return "True" if (map[field] in func_studies) else "False"
+        return "True" if (study_type_map[field] in func_studies) else "False"
 
     async def _generate_prompt_field(self, gene_symbol: str, observation: Observation, field: str) -> str:
         if field == "phenotype":

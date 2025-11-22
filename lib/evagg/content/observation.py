@@ -240,8 +240,8 @@ class ObservationFinder(IFindObservations):
 
         table_ids = {t.id for t in table_sections}
         table_texts = []
-        for id in table_ids:
-            table_texts.append("\n\n".join([sec.text for sec in table_sections if sec.id == id]))
+        for table_id in table_ids:
+            table_texts.append("\n\n".join([sec.text for sec in table_sections if sec.id == table_id]))
 
         return paper_text, table_texts
 

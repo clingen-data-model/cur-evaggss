@@ -41,8 +41,8 @@ class SimpleFileLibrary(IGetPapers):
     def _load_collections(self) -> List[Paper]:
         papers = []
         # Read in each json file in each collection as a Paper object.
-        for file in [os.path.join(c, f) for c in self._collections for f in os.listdir(c) if f.endswith(".json")]:
-            papers.append(Paper(**json.load(open(file, "r"))))
+        for json_file in [os.path.join(c, f) for c in self._collections for f in os.listdir(c) if f.endswith(".json")]:
+            papers.append(Paper(**json.load(open(json_file, "r"))))
         return papers
 
     def get_papers(self, query: Dict[str, Any]) -> Sequence[Paper]:
