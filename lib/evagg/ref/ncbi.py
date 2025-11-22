@@ -18,13 +18,13 @@ class NcbiApiSettings(BaseModel, extra=Extra.forbid):
     api_key: Optional[str] = None
     email: str = "biomedcomp@microsoft.com"
 
-    def get_key_string(self) -> Optional[str]:
-        key_string = ""
+    def get_key_params(self) -> dict[str, str]:
+        params: dict[str, str] = {}
         if self.email:
-            key_string += f"&email={urlparse.quote(self.email)}"
+            params["email"] = urlparse.quote(self.email)
         if self.api_key:
-            key_string += f"&api_key={self.api_key}"
-        return key_string if key_string else None
+            params["api_key"] = self.api_key
+        return params
 
     @root_validator(pre=True)
     @classmethod
@@ -38,25 +38,37 @@ class NcbiClientBase:
     EUTILS_HOST = "https://eutils.ncbi.nlm.nih.gov"
     EUTILS_SEARCH_SITE = "/entrez/eutils/esearch.fcgi"
     EUTILS_FETCH_SITE = "/entrez/eutils/efetch.fcgi"
-    # NB: this can likely be improved with urllib.parse.urlencode
-    EUTILS_SEARCH_URL = EUTILS_SEARCH_SITE + "?db={db}&term={term}&sort={sort}&tool=biopython"
-    EUTILS_FETCH_URL = EUTILS_FETCH_SITE + "?db={db}&id={id}&retmode={retmode}&rettype={rettype}&tool=biopython"
 
     def __init__(self, web_client: RequestsWebContentClient, settings: Optional[Dict[str, str]] = None) -> None:
         self._config = NcbiApiSettings(**settings) if settings else NcbiApiSettings()
         self._web_client = web_client
 
     def _esearch(self, db: str, term: str, sort: str, **extra_params: Dict[str, Any]) -> Any:
-        key_string = self._config.get_key_string()
-        url = self.EUTILS_SEARCH_URL.format(db=db, term=term, sort=sort)
-        url += "".join([f"&{k}={v}" for k, v in extra_params.items()])
-        return self._web_client.get(f"{self.EUTILS_HOST}{url}", content_type="xml", url_extra=key_string)
+        params = {"db": db, "term": term, "sort": sort, "tool": "biopython"}
+        return self._web_client.get(
+            f"{self.EUTILS_HOST}{self.EUTILS_SEARCH_SITE}",
+            params={
+                **self._config.get_key_params(),
+                **params,
+                **extra_params,
+            },
+            content_type="xml",
+        )
 
     def _efetch(self, db: str, id: str, retmode: str | None = None, rettype: str | None = None) -> Any:
-        key_string = self._config.get_key_string()
-        url = self.EUTILS_FETCH_URL.format(db=db, id=id, retmode=retmode, rettype=rettype)
-        # NB: improve logging here, we want better visibility into http requests and responses
-        return self._web_client.get(f"{self.EUTILS_HOST}{url}", content_type=retmode, url_extra=key_string)
+        params = {"db": db, "id": id, "tool": "biopython"}
+        if retmode:
+            params["retmode"] = retmode
+        if rettype:
+            params["rettype"] = rettype
+        return self._web_client.get(
+            f"{self.EUTILS_HOST}{self.EUTILS_FETCH_SITE}",
+            params={
+                **self._config.get_key_params(),
+                **params,
+            },
+            content_type=retmode,
+        )
 
 
 PAPER_BASE_PROPS = {
